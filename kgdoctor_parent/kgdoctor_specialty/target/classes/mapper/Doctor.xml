@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hss.kgdoctor.mapper.DoctorInfoMapper" >
+
+    <select id="getDoctorWithSpecialty" resultType="com.hss.kgdoctor.common.domin.DoctorVO" >
+        select d.doctor_name,d.hospital,d.title,d.introduction,s.specialty_name from tb_doctor_specialty as ds left join tb_doctor as d on d.doctor_id=ds.doctor_id left join tb_specialty as s on s.specialty_id=ds.specialty_id where d.doctor_id = #{doctorId}
+    </select>
+
+</mapper>
