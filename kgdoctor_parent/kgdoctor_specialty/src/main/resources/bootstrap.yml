@@ -1,6 +1,6 @@
 spring:
   application:
-    name: uaa-service
+    name: doctor-service
   cloud:
     nacos:
       config:
