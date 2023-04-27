@@ -50,7 +50,7 @@ public class DctorInfoController {
     }
 
     @GetMapping("/infowithspe/{id}")
-    public Result getDoctorInfoWithSpecialtyById(@PathVariable("id") Long id) {
+    public Result<DoctorVO> getDoctorInfoWithSpecialtyById(@PathVariable("id") Long id) {
         DoctorVO info;
         // 先从Redis中找
         String key = DOCTOR_WITH_SPECIALTY_CACHE_KEY + String.valueOf(id);

@@ -23,6 +23,14 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorInfoMapper, DoctorEntit
     @Override
     public DoctorVO getDoctorInfoWithSpecialtyById(Long id) {
         DoctorVO doctorWithSpecialty = doctorInfoMapper.getDoctorWithSpecialty(id);
+        if (doctorWithSpecialty == null) {
+            // 可能存在还没有帮这个医生设置科室的情况，这里就返回其他属性就行
+            DoctorEntity doctorEntity = this.getById(id);
+            doctorWithSpecialty.setDoctorName(doctorEntity.getDoctorName());
+            doctorWithSpecialty.setHospital(doctorEntity.getHospital());
+            doctorWithSpecialty.setTitle(doctorEntity.getTitle());
+            doctorWithSpecialty.setIntroduction(doctorEntity.getIntroduction());
+        }
         return doctorWithSpecialty;
     }
 
