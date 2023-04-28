@@ -1,5 +1,6 @@
 package com.hss.kgdoctor.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -8,7 +9,7 @@ import com.hss.kgdoctor.common.domin.UserEntity;
 import com.hss.kgdoctor.common.exception.BusinessException;
 import com.hss.kgdoctor.common.redis.CommonRedisKey;
 import com.hss.kgdoctor.domin.LoginUser;
-import com.hss.kgdoctor.domin.UserResponse;
+import com.hss.kgdoctor.common.domin.UserDTO;
 import com.hss.kgdoctor.mapper.UserMapper;
 import com.hss.kgdoctor.redis.UaaRedisKey;
 import com.hss.kgdoctor.service.IUserService;
@@ -19,7 +20,12 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import static com.hss.kgdoctor.common.redis.CommonRedisKey.USER_TOKEN;
 
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, UserEntity> implements IUserService {
@@ -30,15 +36,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserEntity> impleme
     LoginUserService loginUserService;
 
     @Override
-    public UserResponse login(String email, String password) {
+    public String login(String email, String password) {
         LoginUser loginUser = this.getUser(email);
         //进行密码加盐比对
         if(loginUser==null || !loginUser.getPassword().equals(MD5Util.encode(password,loginUser.getSalt()))){
             throw new BusinessException(UAACodeMsg.LOGIN_ERROR);
         }
         UserEntity userInfo = this.getUserInfo(email);
-        String token = createToken(email);
-        return new UserResponse(token,userInfo);
+        String token = UUID.randomUUID().toString().replace("-","");
+        String key = USER_TOKEN + token;
+        UserDTO userDTO = new UserDTO();
+        BeanUtil.copyProperties(userInfo,userDTO);
+        Map<String, Object> beanMap = BeanUtil.beanToMap(userDTO);
+        Map<String, String> stringMap = new HashMap<>();
+        beanMap.forEach((k,v) -> {
+            stringMap.put(k,String.valueOf(v));
+        });
+        redisTemplate.opsForHash().putAll(key,stringMap);
+        redisTemplate.expire(key,30, TimeUnit.MINUTES);
+        return token;
     }
 
     private LoginUser getUser(String email) {
@@ -79,12 +95,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserEntity> impleme
         return this.getOne(queryWrapperr);
     }
 
-    private String createToken(String email) {
-        //token创建
-        String token = UUID.randomUUID().toString().replace("-","");
-        //把user对象存储到redis中
-        CommonRedisKey user_token_key = CommonRedisKey.USER_TOKEN;
-        redisTemplate.opsForValue().set(user_token_key.getRealKey(token), email, user_token_key.getExpireTime(),user_token_key.getUnit());
-        return token;
-    }
+//    private String createToken(String email) {
+//        //token创建
+//        String token = UUID.randomUUID().toString().replace("-","");
+//        //把user对象存储到redis中
+//        CommonRedisKey user_token_key = CommonRedisKey.USER_TOKEN;
+//        redisTemplate.opsForValue().set(user_token_key.getRealKey(token), email, user_token_key.getExpireTime(),user_token_key.getUnit());
+//        return token;
+//    }
 }

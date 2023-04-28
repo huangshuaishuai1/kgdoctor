@@ -112,6 +112,8 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
         RLock lock = redissonClient.getLock("seckill:upload:lock");
         lock.lock(10, TimeUnit.SECONDS);
         try {
+            log.info("开始删除过期商品");
+            deleteByTime();
             log.info("开始上传！！");
             List<Stock> stocks = getStockByTime();
             for (Stock stock : stocks) {
@@ -126,6 +128,17 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
             lock.unlock();
         }
     }
+
+    private void deleteByTime() {
+        // 因为是三点钟执行的，删除昨天的商品就行
+        LocalDate time = getEndTime(-1);
+        Date date = Date.from(time.atStartOfDay(ZoneOffset.ofHours(8)).toInstant());;
+        String infoKey = SKEKILL_DOCTOR_KEY + date.getTime();
+        String stockKey = SKEKILL_STOCK_KEY + date.getTime();
+        stringRedisTemplate.delete(infoKey);
+        stringRedisTemplate.delete(stockKey);
+    }
+
     public
     static LocalDate getStartTime() {
         return LocalDate.now();
@@ -134,4 +147,5 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
         LocalDate now = LocalDate.now();
         return now.plusDays(2);
     }
+
 }

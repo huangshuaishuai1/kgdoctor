@@ -1,4 +1,4 @@
-package com.hss.kgdoctor.domin;
+package com.hss.kgdoctor.common.domin;
 
 import com.hss.kgdoctor.common.domin.UserEntity;
 import lombok.*;
@@ -10,7 +10,11 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserResponse {
-    private String token;
-    private UserEntity userInfo;
+public class UserDTO {
+
+    private Long userId;
+
+    private String userName;
+
+    private Integer role;
 }

@@ -3,8 +3,6 @@ package com.hss.kgdoctor.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.hss.kgdoctor.common.domin.UserEntity;
-import com.hss.kgdoctor.domin.LoginUser;
-import com.hss.kgdoctor.domin.UserResponse;
 
 /**
  * Created by hss
@@ -17,7 +15,7 @@ public interface IUserService extends IService<UserEntity> {
      * @param
      * @return
      */
-    UserResponse login(String email, String password);
+    String login(String email, String password);
 
     /**
      * 根据邮箱获取UserInfo

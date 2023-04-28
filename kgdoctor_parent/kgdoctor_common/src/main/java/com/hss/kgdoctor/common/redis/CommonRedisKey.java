@@ -7,18 +7,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by hss
  */
-@Getter
-public enum CommonRedisKey {
-    USER_TOKEN("userToken:",TimeUnit.MINUTES,30);
-    CommonRedisKey(String prefix, TimeUnit unit, int expireTime){
-        this.prefix = prefix;
-        this.unit = unit;
-        this.expireTime = expireTime;
-    }
-    public String getRealKey(String key){
-        return this.prefix+key;
-    }
-    private String prefix;
-    private TimeUnit unit;
-    private int expireTime;
+
+public class CommonRedisKey {
+    public static final String USER_TOKEN = "user:token:";
+//    public static final String SKEKILL_STOCK_KEY = "cache:seckill:doctor:stock:";
 }
