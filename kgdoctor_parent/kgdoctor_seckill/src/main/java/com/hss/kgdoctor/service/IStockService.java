@@ -8,4 +8,6 @@ public interface IStockService extends IService<Stock> {
     String uploadById(Long id);
 
     void uploadByTime();
+
+    Result doSeckill(Long id, String token);
 }

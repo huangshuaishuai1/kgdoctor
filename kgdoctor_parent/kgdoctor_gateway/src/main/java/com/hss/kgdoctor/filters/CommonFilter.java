@@ -1,17 +1,11 @@
 package com.hss.kgdoctor.filters;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.AntPathMatcher;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.hss.kgdoctor.common.constants.CommonConstants;
-import com.hss.kgdoctor.common.domin.UserDTO;
-import com.hss.kgdoctor.common.redis.CommonRedisKey;
-import com.hss.kgdoctor.common.util.UserHolder;
-import jdk.nashorn.internal.ir.CallNode;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -27,7 +21,6 @@ import reactor.core.publisher.Mono;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.hss.kgdoctor.common.redis.CommonRedisKey.USER_TOKEN;
@@ -50,6 +43,8 @@ public class CommonFilter implements GlobalFilter {
         /**
          * 2.在请求头中添加FEIGN_REQUEST的请求头，值为0，标记请求不是Feign调用，而是客户端调用
          */
+        log.info(String.valueOf(Thread.currentThread().getId()));
+        log.info(String.valueOf(Thread.currentThread().getName()));
         ServerHttpRequest request = exchange.getRequest().mutate().
                 header(CommonConstants.REAL_IP,exchange.getRequest().getRemoteAddress().getHostString()).
                 header(CommonConstants.FEIGN_REQUEST_KEY,CommonConstants.FEIGN_REQUEST_FALSE).
@@ -63,22 +58,17 @@ public class CommonFilter implements GlobalFilter {
         }
         if(StrUtil.isBlank(token)){
             log.info("【登录拦截】未获取到token值...");
-            loginResponse(exchange);
+            return loginResponse(exchange);
         }
         log.debug("【登录拦截】获取token值:"+token);
         try {
             // 根据token拿到登录用户
-            Map<Object, Object> userMap = redisTemplate.opsForHash().entries(USER_TOKEN + token);
-            if (userMap.isEmpty()){
+            String jwt = redisTemplate.opsForValue().get(USER_TOKEN + token);
+            if (StrUtil.isEmpty(jwt)){
                 // 进行拦截
                 log.info("【登录拦截】token过期...");
-                loginResponse(exchange);
+                return loginResponse(exchange);
             }
-            UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);
-            // 获取token中的用户名
-            Long userId = userDTO.getUserId();
-            log.info("【登录拦截】获取userId:"+userId);
-            UserHolder.saveUser(userDTO);
             // 刷新token有效期
             redisTemplate.expire(USER_TOKEN + token, 30, TimeUnit.MINUTES);
         } catch (Exception e) {

@@ -1,7 +1,6 @@
 package com.hss.kgdoctor.web.controller;
 
 import com.hss.kgdoctor.common.constants.CommonConstants;
-import com.hss.kgdoctor.common.util.UserHolder;
 import com.hss.kgdoctor.common.web.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +21,7 @@ public class LogoutController {
     StringRedisTemplate stringRedisTemplate;
     @GetMapping
     public Result logout(@RequestHeader(CommonConstants.TOKEN_NAME) String token) {
-        UserHolder.removeUser();
+//        UserHolder.removeUser();
         // 将Redis中的token缓存删了
         String key = USER_TOKEN + token;
         stringRedisTemplate.delete(key);

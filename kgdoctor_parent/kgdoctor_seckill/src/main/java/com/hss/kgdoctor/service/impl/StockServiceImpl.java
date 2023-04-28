@@ -1,18 +1,21 @@
 package com.hss.kgdoctor.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hss.kgdoctor.common.domin.DoctorVO;
+import com.hss.kgdoctor.common.util.JwtHelper;
 import com.hss.kgdoctor.common.web.CodeMsg;
 import com.hss.kgdoctor.common.web.Result;
+import com.hss.kgdoctor.domin.RegistrationOrder;
 import com.hss.kgdoctor.domin.Stock;
 import com.hss.kgdoctor.feign.DoctorFeignClient;
 import com.hss.kgdoctor.mapper.StockMapper;
+import com.hss.kgdoctor.service.IRegistrationOrderService;
 import com.hss.kgdoctor.service.IStockService;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.Redisson;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +23,16 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.hss.kgdoctor.common.redis.CommonRedisKey.USER_TOKEN;
 import static com.hss.kgdoctor.constants.RedisKeyConstants.SKEKILL_DOCTOR_KEY;
 import static com.hss.kgdoctor.constants.RedisKeyConstants.SKEKILL_STOCK_KEY;
 
@@ -40,6 +47,8 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
     @Autowired
     DoctorFeignClient doctorFeignClient;
 
+    @Autowired
+    IRegistrationOrderService registrationOrderService;
     @Autowired
     RedissonClient redissonClient;
     /**
@@ -127,6 +136,60 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
         }finally {
             lock.unlock();
         }
+    }
+
+    @Override
+    @Transactional
+    public Result doSeckill(Long id, String token) {
+        log.info(String.valueOf(Thread.currentThread().getId()));
+        log.info(String.valueOf(Thread.currentThread().getName()));
+        Stock stock = getById(id);
+        if (stock == null) {
+            CodeMsg notExist = new CodeMsg(5000, "商品不存在");
+            return Result.error(notExist);
+        }
+        // 判断时间是否到了八点钟，没到就不准抢(比如后天的挂号是今天8点开始可抢的)
+        Date date = stock.getDate();
+        Calendar calendar = new GregorianCalendar();
+        calendar.setTime(date);
+        // 把日期往后增加一天,整数  往后推,负数往前移动
+        calendar.add(Calendar.DATE, -1);
+        calendar.add(Calendar.HOUR, -16);
+        date = calendar.getTime();
+        Date now = new Date();
+        if (now.getTime() < date.getTime()) {
+            CodeMsg timeError = new CodeMsg(5001, "未到抢购时间");
+            return Result.error(timeError);
+        }
+        // 判断是否登录，没登陆的不准抢
+        if (token == null || Boolean.FALSE.equals(stringRedisTemplate.hasKey(USER_TOKEN + token))){
+            CodeMsg needLogin = new CodeMsg(5002, "请登陆后再操作");
+            return Result.error(needLogin);
+        }
+        String jwt = stringRedisTemplate.opsForValue().get(USER_TOKEN + token);
+
+//        UserDTO user = UserHolder.getUser();
+        if (StrUtil.isBlank(jwt)) {
+            CodeMsg needLogin = new CodeMsg(5002, "请登陆后再操作");
+            return Result.error(needLogin);
+        }
+        // 判断库存数量，数量不足返回失败
+        Long stockNum = stock.getStockNum();
+        if (stockNum <= 0) {
+            CodeMsg sold = new CodeMsg(5003, "商品已经卖完啦");
+            return Result.error(sold);
+        }
+        // ·向order表插入数据
+        Long userId = JwtHelper.getUserId(jwt);
+        RegistrationOrder registrationOrder = new RegistrationOrder();
+        registrationOrder.setUserId(userId);
+        registrationOrder.setDoctorId(stock.getDoctorId());
+        registrationOrder.setOrderStatus(1);
+        registrationOrderService.save(registrationOrder);
+        // 减对应商品库存
+        stock.setStockNum(stockNum-1);
+        this.updateById(stock);
+        return Result.success();
     }
 
     private void deleteByTime() {

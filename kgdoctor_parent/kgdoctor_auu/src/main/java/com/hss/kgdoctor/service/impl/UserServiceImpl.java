@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hss.kgdoctor.common.domin.UserEntity;
 import com.hss.kgdoctor.common.exception.BusinessException;
 import com.hss.kgdoctor.common.redis.CommonRedisKey;
+import com.hss.kgdoctor.common.util.JwtHelper;
 import com.hss.kgdoctor.domin.LoginUser;
 import com.hss.kgdoctor.common.domin.UserDTO;
 import com.hss.kgdoctor.mapper.UserMapper;
@@ -44,16 +45,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserEntity> impleme
         }
         UserEntity userInfo = this.getUserInfo(email);
         String token = UUID.randomUUID().toString().replace("-","");
+        String jwt = JwtHelper.createToken(userInfo.getUserId(), userInfo.getUserName());
         String key = USER_TOKEN + token;
-        UserDTO userDTO = new UserDTO();
-        BeanUtil.copyProperties(userInfo,userDTO);
-        Map<String, Object> beanMap = BeanUtil.beanToMap(userDTO);
-        Map<String, String> stringMap = new HashMap<>();
-        beanMap.forEach((k,v) -> {
-            stringMap.put(k,String.valueOf(v));
-        });
-        redisTemplate.opsForHash().putAll(key,stringMap);
-        redisTemplate.expire(key,30, TimeUnit.MINUTES);
+//        UserDTO userDTO = new UserDTO();
+//        BeanUtil.copyProperties(userInfo,userDTO);
+//        Map<String, Object> beanMap = BeanUtil.beanToMap(userDTO);
+//        Map<String, String> stringMap = new HashMap<>();
+//        beanMap.forEach((k,v) -> {
+//            stringMap.put(k,String.valueOf(v));
+//        });
+        redisTemplate.opsForValue().set(key,jwt,30,TimeUnit.MINUTES);
         return token;
     }
 

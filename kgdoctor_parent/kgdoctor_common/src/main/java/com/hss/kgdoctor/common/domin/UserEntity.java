@@ -19,7 +19,7 @@ public class UserEntity implements Serializable {
 	 * 
 	 */
 	@TableId
-	private Integer userId;
+	private Long userId;
 	/**
 	 * 
 	 */
@@ -38,6 +38,6 @@ public class UserEntity implements Serializable {
 	 * 
 	 */
 	@TableField(fill = FieldFill.INSERT)
-	private Date creatTime;
+	private Date createTime;
 
 }
