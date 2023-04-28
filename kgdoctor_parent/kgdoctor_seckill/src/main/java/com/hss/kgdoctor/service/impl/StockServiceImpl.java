@@ -33,8 +33,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.hss.kgdoctor.common.redis.CommonRedisKey.USER_TOKEN;
-import static com.hss.kgdoctor.constants.RedisKeyConstants.SKEKILL_DOCTOR_KEY;
-import static com.hss.kgdoctor.constants.RedisKeyConstants.SKEKILL_STOCK_KEY;
+import static com.hss.kgdoctor.constants.RedisKeyConstants.*;
 
 @Service
 @Slf4j
@@ -51,6 +50,7 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
     IRegistrationOrderService registrationOrderService;
     @Autowired
     RedissonClient redissonClient;
+
     /**
      * 上传单个挂号的商品
      * @param id
@@ -141,15 +141,77 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
     @Override
     @Transactional
     public Result doSeckill(Long id, String token) {
-        log.info(String.valueOf(Thread.currentThread().getId()));
-        log.info(String.valueOf(Thread.currentThread().getName()));
         Stock stock = getById(id);
         if (stock == null) {
             CodeMsg notExist = new CodeMsg(5000, "商品不存在");
             return Result.error(notExist);
         }
         // 判断时间是否到了八点钟，没到就不准抢(比如后天的挂号是今天8点开始可抢的)
-        Date date = stock.getDate();
+        if (isVaildTime(stock.getDate())) {
+            CodeMsg timeError = new CodeMsg(5001, "未到抢购时间");
+            return Result.error(timeError);
+        }
+
+        // 判断是否登录，没登陆的不准抢
+        if (token == null || Boolean.FALSE.equals(stringRedisTemplate.hasKey(USER_TOKEN + token))){
+            CodeMsg needLogin = new CodeMsg(5002, "请登陆后再操作");
+            return Result.error(needLogin);
+        }
+        String jwt = stringRedisTemplate.opsForValue().get(USER_TOKEN + token);
+//        UserDTO user = UserHolder.getUser();
+        Long userId = JwtHelper.getUserId(jwt);
+        if (StrUtil.isBlank(jwt) || userId == null) {
+            CodeMsg needLogin = new CodeMsg(5002, "请登陆后再操作");
+            return Result.error(needLogin);
+        }
+        // 判断是否下过单了，不可重复下单
+        String repeatKey = SECKILL_ORDER_SET + id;
+        if (Boolean.TRUE.equals(stringRedisTemplate.opsForSet().isMember(repeatKey, String.valueOf(userId)))){
+            CodeMsg repeatOperate = new CodeMsg(5004, "请勿重复挂号！");
+            return Result.error(repeatOperate);
+        }
+
+//        // 判断库存数量，数量不足返回失败
+//        Long stockNum = stock.getStockNum();
+//        if (stockNum <= 0) {
+//            CodeMsg sold = new CodeMsg(5003, "商品已经卖完啦");
+//            return Result.error(sold);
+//        }
+
+        // 这里使用Redis中的预库存进行一次拦截
+        String countKey = SKEKILL_STOCK_KEY + stock.getDate().getTime();
+        Long remainCount = stringRedisTemplate.opsForHash().increment(countKey, String.valueOf(id), -1);
+        if (remainCount < 0) {
+            CodeMsg sold = new CodeMsg(5003, "该医生当天已越满");
+            return Result.error(sold);
+        }
+
+        // 获取分布式锁
+        RLock lock = redissonClient.getLock("seckill:doseckill:lock" + userId);
+        boolean isLock = lock.tryLock();
+        if (!isLock) {
+            CodeMsg repeatOperate = new CodeMsg(5004, "请勿重复挂号！");
+            return Result.error(repeatOperate);
+        }
+        try {
+            // ·向order表插入数据
+            boolean isSuccess = creatOrder(stock,userId);
+            // 如果秒杀失败了，要对Redis中的预库存进行恢复
+            if (!isSuccess) {
+                CodeMsg sold = new CodeMsg(5003, "商品已经卖完啦");
+                // 恢复库存
+                syncRedisStock(id);
+                return Result.error(sold);
+            }
+        }finally {
+            lock.unlock();
+        }
+        // 将挂号成功的用户id加入Redis中
+        stringRedisTemplate.opsForSet().add(repeatKey,String.valueOf(userId));
+        return Result.success();
+    }
+
+    private boolean isVaildTime(Date date) {
         Calendar calendar = new GregorianCalendar();
         calendar.setTime(date);
         // 把日期往后增加一天,整数  往后推,负数往前移动
@@ -157,39 +219,33 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
         calendar.add(Calendar.HOUR, -16);
         date = calendar.getTime();
         Date now = new Date();
-        if (now.getTime() < date.getTime()) {
-            CodeMsg timeError = new CodeMsg(5001, "未到抢购时间");
-            return Result.error(timeError);
-        }
-        // 判断是否登录，没登陆的不准抢
-        if (token == null || Boolean.FALSE.equals(stringRedisTemplate.hasKey(USER_TOKEN + token))){
-            CodeMsg needLogin = new CodeMsg(5002, "请登陆后再操作");
-            return Result.error(needLogin);
-        }
-        String jwt = stringRedisTemplate.opsForValue().get(USER_TOKEN + token);
+        return now.getTime() < date.getTime();
+    }
 
-//        UserDTO user = UserHolder.getUser();
-        if (StrUtil.isBlank(jwt)) {
-            CodeMsg needLogin = new CodeMsg(5002, "请登陆后再操作");
-            return Result.error(needLogin);
+    public void syncRedisStock(Long seckillId) {
+        Stock stock = this.getById(seckillId);
+        Long stockNum =  stock.getStockNum();
+        if(stockNum>0){
+            String key = SKEKILL_STOCK_KEY + stock.getDate().getTime();
+            stringRedisTemplate.opsForHash().put(key,String.valueOf(seckillId),String.valueOf(stockNum));
         }
-        // 判断库存数量，数量不足返回失败
-        Long stockNum = stock.getStockNum();
-        if (stockNum <= 0) {
-            CodeMsg sold = new CodeMsg(5003, "商品已经卖完啦");
-            return Result.error(sold);
-        }
-        // ·向order表插入数据
-        Long userId = JwtHelper.getUserId(jwt);
+    }
+
+
+    private boolean creatOrder(Stock stock, Long userId) {
         RegistrationOrder registrationOrder = new RegistrationOrder();
         registrationOrder.setUserId(userId);
         registrationOrder.setDoctorId(stock.getDoctorId());
         registrationOrder.setOrderStatus(1);
+        registrationOrder.setRegistrationDate(stock.getDate());
+        registrationOrder.setStockId(stock.getStockId());
         registrationOrderService.save(registrationOrder);
-        // 减对应商品库存
-        stock.setStockNum(stockNum-1);
-        this.updateById(stock);
-        return Result.success();
+        // 减对应商品库存(乐观锁的思想)
+        boolean isSuccess = this.update().setSql("stock_num = stock_num-1")
+                .eq("stock_id", stock.getStockId())
+                .gt("stock_num", 0)
+                .update();
+        return isSuccess;
     }
 
     private void deleteByTime() {

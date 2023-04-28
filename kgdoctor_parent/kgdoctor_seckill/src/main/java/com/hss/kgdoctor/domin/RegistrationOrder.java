@@ -22,6 +22,10 @@ public class RegistrationOrder {
 
     Long doctorId;
 
+    Long stockId;
+
+    Date RegistrationDate;
+
     Integer orderStatus;
 
     @TableField(fill = FieldFill.INSERT)
