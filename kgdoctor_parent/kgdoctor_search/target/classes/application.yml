@@ -1,0 +1,4 @@
+elasticsearch:
+  host: 120.48.22.152:9200
+spring:
+  port: 8111
