@@ -15,6 +15,7 @@
         <module>kgdoctor_seckill</module>
         <module>kgdoctor_specialty</module>
         <module>kgdoctor_search</module>
+        <module>kgdoctor_netty</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
