@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
@@ -20,4 +21,6 @@ public class DoctorVO implements Serializable {
     private String introduction;
 
     private String specialtyName;
+
+    private BigDecimal inquiryPrice;
 }

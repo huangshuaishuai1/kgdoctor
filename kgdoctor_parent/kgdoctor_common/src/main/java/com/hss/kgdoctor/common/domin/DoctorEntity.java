@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
@@ -24,5 +25,10 @@ public class DoctorEntity implements Serializable {
     private String introduction;
 
     private Long userId;
+
+    // 是否开启接诊  0 关闭  1  开启
+    private Integer enableInquiry;
+
+    private BigDecimal inquiryPrice;
 
 }

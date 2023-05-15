@@ -1,6 +1,7 @@
-package com.hss.spring.server;
+package com.hss.kgdoctor.server;
 
 
+import com.hss.kgdoctor.handler.WebSocketHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -49,7 +50,7 @@ public class WebSocketServer {
                             // 对于websocket来讲，都是以frames进行传输的，不同的数据类型对应的frames也不同
                             ch.pipeline().addLast(new WebSocketServerProtocolHandler("/ws"));
                             // 添加自定义的channel处理器
-
+                            ch.pipeline().addLast(new WebSocketHandler());
                         }
                     });
             log.debug("服务器启动中，websocket的端口为：{}",port);

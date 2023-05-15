@@ -27,6 +27,7 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorInfoMapper, DoctorEntit
             // 可能存在还没有帮这个医生设置科室的情况，这里就返回其他属性就行
             DoctorEntity doctorEntity = this.getById(id);
             doctorWithSpecialty.setDoctorName(doctorEntity.getDoctorName());
+            doctorWithSpecialty.setInquiryPrice(doctorEntity.getInquiryPrice());
             doctorWithSpecialty.setHospital(doctorEntity.getHospital());
             doctorWithSpecialty.setTitle(doctorEntity.getTitle());
             doctorWithSpecialty.setIntroduction(doctorEntity.getIntroduction());

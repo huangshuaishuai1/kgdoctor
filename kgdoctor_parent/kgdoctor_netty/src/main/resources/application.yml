@@ -3,3 +3,7 @@ server:
 
 netty:
   port: 9998
+
+resources:
+  static-locations:
+    - classpath:/static/

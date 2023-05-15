@@ -2,6 +2,7 @@ package com.hss.kgdoctor.web.controller;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.hss.kgdoctor.common.domin.DoctorEntity;
 import com.hss.kgdoctor.common.domin.DoctorVO;
 import com.hss.kgdoctor.common.web.CodeMsg;
@@ -29,7 +30,7 @@ public class DctorInfoController {
     @Autowired
     StringRedisTemplate stringRedisTemplate;
     @GetMapping("/info/{id}")
-    public Result getDoctorInfoById(@PathVariable("id") Long id) {
+    public Result<DoctorEntity> getDoctorInfoById(@PathVariable("id") Long id) {
         DoctorEntity info;
         // 先从Redis中找
         String key = DOCTOR_CACHE_KEY + String.valueOf(id);
@@ -68,5 +69,12 @@ public class DctorInfoController {
         String jsonStr = JSONUtil.toJsonStr(info);
         stringRedisTemplate.opsForValue().set(key,jsonStr,60, TimeUnit.MINUTES);
         return Result.success(info);
+    }
+
+    @GetMapping("/exist/{id}")
+    public Boolean isExist(@PathVariable("id") Long id) {
+        QueryWrapper<DoctorEntity> wrapper = new QueryWrapper<>();
+        int count = doctorService.count(wrapper.eq("doctor_id", id));
+        return count > 0;
     }
 }

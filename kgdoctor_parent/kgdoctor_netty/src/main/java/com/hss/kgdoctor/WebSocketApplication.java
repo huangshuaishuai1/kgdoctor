@@ -1,12 +1,13 @@
-package com.hss.spring;
+package com.hss.kgdoctor;
 
-import com.hss.spring.server.WebSocketServer;
+import com.hss.kgdoctor.server.WebSocketServer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
 public class WebSocketApplication implements CommandLineRunner {
     @Autowired
     private WebSocketServer webSocketServer;
@@ -16,6 +17,15 @@ public class WebSocketApplication implements CommandLineRunner {
     }
     @Override
     public void run(String... args) throws Exception {
-        webSocketServer.run();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    webSocketServer.run();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();
     }
 }
