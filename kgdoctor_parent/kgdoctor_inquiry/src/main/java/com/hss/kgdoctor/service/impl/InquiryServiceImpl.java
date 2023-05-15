@@ -9,12 +9,15 @@ import com.hss.kgdoctor.common.web.CodeMsg;
 import com.hss.kgdoctor.common.web.Result;
 import com.hss.kgdoctor.feign.DoctorFeignClient;
 import com.hss.kgdoctor.mapper.InquiryMapper;
+import com.hss.kgdoctor.mq.MQOrderMessage;
 import com.hss.kgdoctor.service.InquiryService;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import static com.hss.kgdoctor.common.redis.CommonRedisKey.USER_TOKEN;
+import static com.hss.kgdoctor.mq.MQConstants.INJUIRY_ORDER_TOPIC;
 
 @Service
 public class InquiryServiceImpl extends ServiceImpl<InquiryMapper, InquiryOrder> implements InquiryService {
@@ -25,6 +28,8 @@ public class InquiryServiceImpl extends ServiceImpl<InquiryMapper, InquiryOrder>
     @Autowired
     DoctorFeignClient doctorFeignClient;
 
+    @Autowired
+    RocketMQTemplate rocketMQTemplate;
     @Override
     public Result buyInquiry(Long doctorId, String token) {
         // 判断用户是否登录
@@ -37,11 +42,10 @@ public class InquiryServiceImpl extends ServiceImpl<InquiryMapper, InquiryOrder>
         if (StrUtil.isBlank(jwt) || userId == null) {
             CodeMsg needLogin = new CodeMsg(5002, "请登陆后再操作");
             return Result.error(needLogin);
-        }
-        // 判断医生是否存在
-        if (!doctorFeignClient.isExist(doctorId)) {
+        }        if (!doctorFeignClient.isExist(doctorId)) {
             CodeMsg doctorNotExist = new CodeMsg(7001, "医生不存在！");
             return Result.error(doctorNotExist);
+//            return;
         }
         Result<DoctorEntity> doctorInfoById = doctorFeignClient.getDoctorInfoById(doctorId);
         DoctorEntity doctor = doctorInfoById.getData();
@@ -49,20 +53,22 @@ public class InquiryServiceImpl extends ServiceImpl<InquiryMapper, InquiryOrder>
         if (doctor.getEnableInquiry() == 0) {
             CodeMsg doctorNotInquiry = new CodeMsg(7002, "医生暂不接诊！");
             return Result.error(doctorNotInquiry);
+//            return;
         }
-        if (!createOrder(doctorId,userId)) {
-            CodeMsg createOrderFail = new CodeMsg(7003, "创建订单失败，请重试！");
-            return Result.error(createOrderFail);
-        }
-        return Result.success("创建订单成功，请在半小时内支付，超时将取消！");
-    }
-
-
-    private boolean createOrder(Long doctorId, Long userId) {
         InquiryOrder inquiryOrder = new InquiryOrder();
         inquiryOrder.setOrderStatus(0);
         inquiryOrder.setDoctorId(doctorId);
         inquiryOrder.setUserId(userId);
+
+
+        rocketMQTemplate.syncSend(INJUIRY_ORDER_TOPIC,inquiryOrder);
+//        createOrder(inquiryOrder);
+        return Result.success("创建订单中...");
+    }
+
+
+    public boolean createOrder(InquiryOrder inquiryOrder) {
+
         return save(inquiryOrder);
     }
 }

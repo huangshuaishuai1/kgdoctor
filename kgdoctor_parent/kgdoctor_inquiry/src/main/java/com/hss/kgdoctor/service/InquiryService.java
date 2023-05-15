@@ -6,4 +6,5 @@ import com.hss.kgdoctor.common.web.Result;
 
 public interface InquiryService extends IService<InquiryOrder> {
     Result buyInquiry(Long doctorId, String token);
+    boolean createOrder(InquiryOrder inquiryOrder);
 }
