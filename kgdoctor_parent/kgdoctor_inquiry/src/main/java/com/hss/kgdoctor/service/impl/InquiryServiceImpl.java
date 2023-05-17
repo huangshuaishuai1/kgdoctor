@@ -9,7 +9,6 @@ import com.hss.kgdoctor.common.web.CodeMsg;
 import com.hss.kgdoctor.common.web.Result;
 import com.hss.kgdoctor.feign.DoctorFeignClient;
 import com.hss.kgdoctor.mapper.InquiryMapper;
-import com.hss.kgdoctor.mq.MQOrderMessage;
 import com.hss.kgdoctor.service.InquiryService;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;

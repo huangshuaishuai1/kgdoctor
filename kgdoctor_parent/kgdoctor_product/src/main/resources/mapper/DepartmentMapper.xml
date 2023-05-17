@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hss.kgdoctor.mapper.DepartmentMapper" >
+
+    <select id="getByHospitalId" resultType="com.hss.kgdoctor.common.domin.Department" >
+        select tb_department.department_id, department_name  from tb_department left join tb_hospital_department thd on tb_department.department_id = thd.department_id where thd.hospital_id = ${id};
+    </select>
+
+
+</mapper>

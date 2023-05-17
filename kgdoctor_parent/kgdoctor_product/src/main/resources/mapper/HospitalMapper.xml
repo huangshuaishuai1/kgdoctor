@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hss.kgdoctor.mapper.HospitalMapper" >
+
+    <select id="page" resultType="com.hss.kgdoctor.common.domin.HospitalEntity" >
+        select * from tb_hospital limit ${page}, ${size};
+    </select>
+
+    <resultMap id="hospitailWithDepartment" type="com.hss.kgdoctor.common.domin.HospitalEntity">
+        <id column="hospital_id" property="hospitalId"></id>
+        <result column="hospital_name" property="hospitalName"></result>
+        <result column="hospital_address" property="hospitalAddress"></result>
+        <collection property="departments" column="hospital_id" select="com.hss.kgdoctor.mapper.DepartmentMapper.getByHospitalId"></collection>
+
+    </resultMap>
+
+    <select id="HospitalDetailById" resultMap="hospitailWithDepartment">
+        select * from tb_hospital where hospital_id = ${id};
+    </select>
+</mapper>

@@ -17,6 +17,8 @@
         <module>kgdoctor_search</module>
         <module>kgdoctor_netty</module>
         <module>kgdoctor_inquiry</module>
+        <module>kgdoctor_admin</module>
+        <module>kgdoctor_product</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
