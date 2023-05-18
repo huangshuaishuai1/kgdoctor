@@ -12,3 +12,6 @@ spring:
   profiles:
     active: dev # 环境标识
 
+logging:
+  level:
+    com.hss.kgdoctor.*: debug

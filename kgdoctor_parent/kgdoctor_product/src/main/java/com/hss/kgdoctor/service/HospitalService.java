@@ -10,5 +10,5 @@ public interface HospitalService extends IService<HospitalEntity> {
 
     HospitalEntity getByHospitalId(Integer id);
 
-     HospitalEntity getByHospitalIdDB(Integer id);
+//     HospitalEntity getByHospitalIdDB(Integer id);
 }

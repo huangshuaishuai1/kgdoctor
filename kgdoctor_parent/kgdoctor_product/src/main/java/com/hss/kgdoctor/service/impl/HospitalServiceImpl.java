@@ -42,19 +42,19 @@ public class HospitalServiceImpl extends ServiceImpl<HospitalMapper, HospitalEnt
         return hospitalEntity;
     }
 
-    @Override
-    public HospitalEntity getByHospitalIdDB(Integer id) {
-//         先查询缓存
-//        String redisKey = HOSPITAL_DETAIL_KEY + id;
-//        String hospitalStr = redisTemplate.opsForValue().get(redisKey);
-//        if (StrUtil.isNotBlank(hospitalStr)) {
-//            HospitalEntity hospitalEntity = JSONUtil.toBean(hospitalStr, HospitalEntity.class);
-//            return hospitalEntity;
-//        }
-        // 缓存中没有，从DB中查询，并存放到Redis中
-        HospitalEntity hospitalEntity  = hospitalMapper.HospitalDetailById(id);
-//        String jsonStr = JSONUtil.toJsonStr(hospitalEntity);
-//        redisTemplate.opsForValue().set(redisKey,jsonStr);
-        return hospitalEntity;
-    }
+//    @Override
+//    public HospitalEntity getByHospitalIdDB(Integer id) {
+////         先查询缓存
+////        String redisKey = HOSPITAL_DETAIL_KEY + id;
+////        String hospitalStr = redisTemplate.opsForValue().get(redisKey);
+////        if (StrUtil.isNotBlank(hospitalStr)) {
+////            HospitalEntity hospitalEntity = JSONUtil.toBean(hospitalStr, HospitalEntity.class);
+////            return hospitalEntity;
+////        }
+//        // 缓存中没有，从DB中查询，并存放到Redis中
+//        HospitalEntity hospitalEntity  = hospitalMapper.HospitalDetailById(id);
+////        String jsonStr = JSONUtil.toJsonStr(hospitalEntity);
+////        redisTemplate.opsForValue().set(redisKey,jsonStr);
+//        return hospitalEntity;
+//    }
 }

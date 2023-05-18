@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hss.kgdoctor.mapper.HospitalMapper" >
+
+    <insert id="bind" >
+            insert into tb_hospital_department (hospital_id, department_id) value (${hospitalId},${departmentId});
+    </insert>
+    <select id="selectIsExit" resultType="java.lang.Integer" >
+        select count(*) from tb_hospital_department where hospital_id=${hospitalId} and department_id=${departmentId};
+    </select>
+</mapper>

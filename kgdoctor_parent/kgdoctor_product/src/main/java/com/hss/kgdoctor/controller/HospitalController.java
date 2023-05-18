@@ -46,10 +46,10 @@ public class HospitalController {
         return Result.success(hospitalEntity);
     }
 
-    @GetMapping("/db/{id}")
-    public Result<HospitalEntity> getByHospitalIdDB(@PathVariable("id") Integer id) {
-        HospitalEntity hospitalEntity = hospitalService.getByHospitalIdDB(id);
-        return Result.success(hospitalEntity);
-    }
+//    @GetMapping("/db/{id}")
+//    public Result<HospitalEntity> getByHospitalIdDB(@PathVariable("id") Integer id) {
+//        HospitalEntity hospitalEntity = hospitalService.getByHospitalIdDB(id);
+//        return Result.success(hospitalEntity);
+//    }
 
 }

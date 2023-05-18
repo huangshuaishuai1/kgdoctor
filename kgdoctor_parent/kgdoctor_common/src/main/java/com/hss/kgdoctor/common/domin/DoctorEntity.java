@@ -14,21 +14,21 @@ import java.util.Date;
 @TableName("tb_doctor")
 public class DoctorEntity implements Serializable {
     @TableId
-    private Long doctorId;
+    private Integer doctorId;
 
     private String doctorName;
 
-    private String hospital;
+    private Integer hospitalId;
+
+    private Integer departmentId;
 
     private String title;
 
     private String introduction;
 
-    private Long userId;
+    private Integer userId;
 
     // 是否开启接诊  0 关闭  1  开启
     private Integer enableInquiry;
-
-    private BigDecimal inquiryPrice;
 
 }
