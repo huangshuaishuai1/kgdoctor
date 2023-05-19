@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hss.kgdoctor.mapper.KnowledgeMapper" >
+
+    <select id="getFuzzyContent" resultType="com.hss.kgdoctor.domin.KnowledgeDTO" >
+        select * from tb_knowledge where knowledge_content like #{key} ;
+</select>
+
+
+</mapper>
