@@ -3,6 +3,7 @@ package com.hss.kgdoctor.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.hss.kgdoctor.common.domin.DoctorEntity;
 import com.hss.kgdoctor.common.web.Resp;
+import com.hss.kgdoctor.domain.DoctorDTO;
 import com.hss.kgdoctor.service.DoctorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,5 +29,12 @@ public class DoctorController {
             return Resp.success("该科室暂无可服务医生！",list);
         }
         return Resp.success(list);
+    }
+
+    // 根据ID查找医生的详情信息（这里会尝试从缓存中找）
+    @GetMapping(("/detail/{doctorId}"))
+    public Resp<DoctorDTO> getDoctorDetail(@PathVariable("doctorId") Integer doctorId) {
+        DoctorDTO doctorDTO = doctorService.getDoctorDetail(doctorId);
+        return Resp.success(doctorDTO);
     }
 }
