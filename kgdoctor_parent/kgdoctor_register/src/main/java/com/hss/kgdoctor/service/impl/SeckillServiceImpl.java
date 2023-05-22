@@ -59,7 +59,7 @@ public class SeckillServiceImpl implements SeckillService {
         }
         String jwt = stringRedisTemplate.opsForValue().get(USER_TOKEN + token);
 //        UserDTO user = UserHolder.getUser();
-        Long userId = JwtHelper.getUserId(jwt);
+        Integer userId = JwtHelper.getUserId(jwt);
         if (StrUtil.isBlank(jwt) || userId == null) {
             throw new AppException(UNLOGIN);
         }
@@ -76,8 +76,8 @@ public class SeckillServiceImpl implements SeckillService {
             throw new AppException(STOCK_OUT_OF_COUNT);
         }
             // 这里通过消息队列传递出去
-        OrderMessage orderMessage = new OrderMessage(token, id);
-        rocketMQTemplate.syncSend(MQConstant.ORDER_PEDDING_TOPIC,orderMessage);
+        OrderMessage orderMessage = new OrderMessage(userId, id);
+        rocketMQTemplate.syncSend(MQConstant.REGISTER_ORDER_PEDDING_TOPIC,orderMessage);
         return Resp.success("成功进入秒杀队列,请耐心等待结果");
 //                // 获取分布式锁
 //        RLock lock = redissonClient.getLock("seckill:doseckill:lock" + userId);
@@ -90,6 +90,18 @@ public class SeckillServiceImpl implements SeckillService {
 //            lock.unlock();
 //        }
 
+    }
+
+    // 回滚预库存
+    @Override
+    public void syncStockToRedis(Integer registerId) {
+        RegisterEntity registerEntity = registerMapper.getById(registerId);
+        if(registerEntity.getRegisterCount()>0){
+            // orderStockCount:10
+            String key = SKEKILL_STOCK_KEY + registerEntity.getRegisterDate();
+            //将数据库库存同步到Redis中.
+            stringRedisTemplate.opsForHash().put(key,String.valueOf(registerId),String.valueOf(registerEntity.getRegisterCount()));
+        }
     }
 
     private boolean isVaildTime(Date date) {

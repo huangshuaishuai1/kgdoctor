@@ -9,4 +9,6 @@ public interface RegisterService extends IService<RegisterEntity> {
     Resp uploadById(Integer id);
 
     public void uploadByTime();
+
+    void decrStock(Integer registerId);
 }

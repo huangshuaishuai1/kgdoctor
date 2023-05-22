@@ -10,5 +10,6 @@ import java.util.concurrent.TimeUnit;
 
 public class CommonRedisKey {
     public static final String USER_TOKEN = "user:token:";
-//    public static final String SKEKILL_STOCK_KEY = "cache:seckill:doctor:stock:";
+    public static final String SKEKILL_STOCK_KEY = "cache:seckill:doctor:stock:";
+
 }

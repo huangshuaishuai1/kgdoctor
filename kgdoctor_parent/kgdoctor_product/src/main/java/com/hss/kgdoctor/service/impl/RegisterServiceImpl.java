@@ -3,6 +3,7 @@ package com.hss.kgdoctor.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hss.kgdoctor.common.domin.DoctorVO;
 import com.hss.kgdoctor.common.domin.RegisterEntity;
@@ -15,6 +16,7 @@ import com.hss.kgdoctor.service.RegisterService;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.AbstractPropertyAccessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -29,8 +31,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.hss.kgdoctor.common.util.AppExceptionCodeMsg.REPEAT_UPLOAD_EXCEPTION;
-import static com.hss.kgdoctor.common.util.AppExceptionCodeMsg.UPLOAD_TIME_INVALID;
+import static com.hss.kgdoctor.common.util.AppExceptionCodeMsg.*;
 import static com.hss.kgdoctor.constants.RedisKeyConstants.SKEKILL_STOCK_KEY;
 
 @Service
@@ -111,6 +112,16 @@ public class RegisterServiceImpl extends ServiceImpl<RegisterMapper,RegisterEnti
             }
         }finally {
             lock.unlock();
+        }
+    }
+
+    @Override
+    public void decrStock(Integer registerId) {
+        UpdateWrapper<RegisterEntity> wrapper = new UpdateWrapper<>();
+        wrapper.setSql("register_count=register_count-1").eq("register_id",registerId).ge("register_count",0);
+        boolean update = this.update(wrapper);
+        if (!update) {
+            throw new AppException(STOCK_OUT_OF_COUNT);
         }
     }
 

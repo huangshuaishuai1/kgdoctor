@@ -5,4 +5,6 @@ import com.hss.kgdoctor.common.web.Result;
 
 public interface SeckillService {
     Resp doSeckill(Integer id, String token);
+
+    void syncStockToRedis(Integer registerId);
 }

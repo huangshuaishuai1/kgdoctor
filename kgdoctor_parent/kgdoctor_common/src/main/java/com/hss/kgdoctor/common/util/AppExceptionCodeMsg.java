@@ -19,7 +19,8 @@ public enum AppExceptionCodeMsg {
     PRODUCT_NOT_EXITS(30001,"挂号不存在！"),
     REPEAT_DO_SECKILL(30002,"请勿重复挂号"),
     STOCK_OUT_OF_COUNT(30003,"库存不足"),
-    SECKILL_TIME_EXCEPTION(30002,"未到抢购时间"),
+    SECKILL_TIME_EXCEPTION(30002,"未到挂号时间"),
+    SECKILL_FAIL(30003,"挂号失败，请重试"),
     USER_CREDIT_NOT_ENOUTH(10002,"用户积分不足");
     ;
 

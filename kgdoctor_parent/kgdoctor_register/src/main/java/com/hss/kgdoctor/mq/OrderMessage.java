@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderMessage {
-    // 用户token
-    private String token;
+    // 用户Id
+    private Integer userId;
     // 挂号Id
     private Integer registerId;
 

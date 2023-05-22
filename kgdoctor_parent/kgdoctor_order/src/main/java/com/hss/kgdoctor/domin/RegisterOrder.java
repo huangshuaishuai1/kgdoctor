@@ -18,11 +18,11 @@ import java.util.Date;
 @TableName("tb_register_order")
 public class RegisterOrder {
     @TableId
-    Long orderId;
+    Integer orderId;
 
-    Long userId;
+    Integer userId;
 
-    Long registerId;
+    Integer registerId;
 
     Integer orderStatus;
 

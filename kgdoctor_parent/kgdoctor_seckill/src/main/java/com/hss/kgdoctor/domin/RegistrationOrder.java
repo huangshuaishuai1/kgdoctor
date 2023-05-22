@@ -18,7 +18,7 @@ public class RegistrationOrder {
     @TableId
     Long orderId;
 
-    Long userId;
+    Integer userId;
 
     Long doctorId;
 

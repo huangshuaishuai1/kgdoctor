@@ -26,13 +26,13 @@ public class JwtHelper {
     }
 
     //根据token字符串得到用户id
-    public static Long getUserId(String token) {
+    public static Integer getUserId(String token) {
         if(StringUtils.isEmpty(token)) return null;
 
         Jws<Claims> claimsJws = Jwts.parser().setSigningKey(tokenSignKey).parseClaimsJws(token);
         Claims claims = claimsJws.getBody();
         Integer userId = (Integer)claims.get("userId");
-        return userId.longValue();
+        return userId;
     }
 
     //根据token字符串得到用户名称

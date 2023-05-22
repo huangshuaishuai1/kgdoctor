@@ -159,7 +159,7 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
         }
         String jwt = stringRedisTemplate.opsForValue().get(USER_TOKEN + token);
 //        UserDTO user = UserHolder.getUser();
-        Long userId = JwtHelper.getUserId(jwt);
+        Integer userId = JwtHelper.getUserId(jwt);
         if (StrUtil.isBlank(jwt) || userId == null) {
             CodeMsg needLogin = new CodeMsg(5002, "请登陆后再操作");
             return Result.error(needLogin);
@@ -232,7 +232,7 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
     }
 
 
-    private boolean creatOrder(Stock stock, Long userId) {
+    private boolean creatOrder(Stock stock, Integer userId) {
         RegistrationOrder registrationOrder = new RegistrationOrder();
         registrationOrder.setUserId(userId);
         registrationOrder.setDoctorId(stock.getDoctorId());
